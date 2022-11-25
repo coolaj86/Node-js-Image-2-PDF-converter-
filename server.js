@@ -9,23 +9,21 @@ const imgToPDF = require("image-to-pdf");
 const fs = require("fs");
 // const fs = require("fs");
 const out_path = path.join(__dirname, "/output.pdf");
-app.use(express.static("./public"));
 
-app.get("/", (req, res) => {
-  res.send("index");
-});
-app.get("/converter", (req, res) => {
-  res.sendFile(out_path);
-});
+app.use("/", express.static("./public"));
+
 app.post("/converter", upload.array("image", 1), async (req, res, next) => {
   if (req.files.length === 0) {
-    res.status(400).send("Files not uploaded");
-  } else {
-    await converter(req.files[0].filename);
-    res.redirect(`http://localhost:${port}/converter`);
-    // res.sendFile(out_path)
+    res.statusCode = 400;
+    res.end("Files not uploaded");
+    return;
   }
+  
+  let ws = converter(req.files[0].filename);
+  ws.pipe(res);
 });
+
+// TODO use 'http.createServer(app).listen()'
 app.listen(port, () => {
   console.log(`Listening at port${port}`);
 });
